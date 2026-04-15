@@ -1,35 +1,24 @@
 import streamlit as st
 from transformers import pipeline
-
-st.title("🤖 AI Text Summarizer")
+# Load the summarization model
+@st.cache_resource
+def load_summarizer():
+    return pipeline("summarization", model="ARTeLab/mbart-summarization-fanpage")
+summarizer = load_summarizer()
+# Streamlit UI
+st.title("📝 AI Text Summarizer")
 st.write("Enter a long text below, and get a concise summary!")
-
-# Input
+# Text Input
 long_text = st.text_area("Enter text to summarize:", height=200)
-
-# Parameters
-max_length = st.slider("Max Summary Length", 50, 300, 120)
-min_length = st.slider("Min Summary Length", 20, 100, 30)
-
-# Button
+# Summary Parameters
+max_length = st.slider("Max Summary Length", min_value=50, max_value=300, value=130)
+min_length = st.slider("Min Summary Length", min_value=20, max_value=100, value=30)
 if st.button("Summarize"):
-    if not long_text.strip():
-        st.warning("Please enter some text!")
+    if long_text.strip():
+        with st.spinner("Generating summary... ⏳"):
+            summary = summarizer(long_text, max_length=max_length, 
+                                 min_length=min_length, do_sample=False)
+            st.subheader("📌 Summary:")
+            st.success(summary[0]['summary_text'])
     else:
-        try:
-            with st.spinner("Loading model... please wait ⏳"):
-                summarizer = pipeline("summarization", model="t5-small")
-
-            with st.spinner("Generating summary..."):
-                summary = summarizer(
-                    long_text,
-                    max_length=max_length,
-                    min_length=min_length,
-                    do_sample=False
-                )
-
-            st.success("Summary:")
-            st.write(summary[0]['summary_text'])
-
-        except Exception as e:
-            st.error(f"Error: {e}")
+        st.warning("⚠️ Please enter some text to summarize.")
