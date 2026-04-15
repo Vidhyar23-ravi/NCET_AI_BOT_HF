@@ -4,13 +4,6 @@ from transformers import pipeline
 st.title("🤖 AI Text Summarizer")
 st.write("Enter a long text below, and get a concise summary!")
 
-# Cache model (IMPORTANT)
-@st.cache_resource
-def load_model():
-    return pipeline("summarization", model="t5-small")
-
-summarizer = load_model()
-
 # Input
 long_text = st.text_area("Enter text to summarize:", height=200)
 
@@ -24,9 +17,12 @@ if st.button("Summarize"):
         st.warning("Please enter some text!")
     else:
         try:
+            with st.spinner("Loading model... please wait ⏳"):
+                summarizer = pipeline("summarization", model="t5-small")
+
             with st.spinner("Generating summary..."):
                 summary = summarizer(
-                    "summarize: " + long_text,  # ✅ FIX HERE
+                    long_text,
                     max_length=max_length,
                     min_length=min_length,
                     do_sample=False
